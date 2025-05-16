@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id               Int          @id @default(autoincrement())
+  nombres          String
+  apellidos        String
+  cedula           String       @unique
+  fecha_nacimiento DateTime     @db.Date
+  telefono         String?
+  pais             String?
+  ciudad           String?
+  email            String       @unique
+  discapacidad     Boolean      @default(false)
+  password         String
+  rol_id           Int
+  citas            Cita[]
+  profesionales    Profesional?
+  roles            roles        @relation(fields: [rol_id], references: [id])
+
+  @@map("usuarios")
+}
+
+model Admin {
+  id       Int    @id @default(autoincrement())
+  usuario  String @unique
+  password String
+  rol_id   Int
+  roles    roles  @relation(fields: [rol_id], references: [id])
+
+  @@map("admins")
+}
+
+model Servicio {
+  id            Int           @id @default(autoincrement())
+  nombre        String
+  descripcion   String?
+  citas         Cita[]
+  profesionales Profesional[]
+
+  @@map("servicios")
+}
+
+model Profesional {
+  usuario_id  Int       @id
+  descripcion String?
+  servicio_id Int
+  citas       Cita[]
+  servicio    Servicio  @relation(fields: [servicio_id], references: [id])
+  usuarios    Usuario   @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  reuniones   Reunion[]
+
+  @@map("profesionales")
+}
+
+model Reunion {
+  id             Int         @id @default(autoincrement())
+  uuid           String
+  meeting_id     String
+  topic          String
+  start_time     DateTime    @db.Timestamp(6)
+  duration       Int
+  agenda         String?
+  start_url      String
+  join_url       String
+  password       String
+  profesional_id Int
+  fecha          DateTime    @db.Timestamp(6)
+  citas          Cita[]
+  profesional    Profesional @relation(fields: [profesional_id], references: [usuario_id], onDelete: Cascade, map: "reuniones_profesional_id_fkey1")
+
+  @@unique([profesional_id, fecha])
+  @@map("reuniones")
+}
+
+model Cita {
+  id             Int         @id @default(autoincrement())
+  usuario_id     Int
+  servicio_id    Int
+  profesional_id Int
+  reunion_id     Int?
+  fecha          DateTime    @db.Date
+  hora           DateTime    @db.Time(6)
+  razon          String?
+  estado         String      @default("pendiente")
+  profesional    Profesional @relation(fields: [profesional_id], references: [usuario_id])
+  reunion        Reunion?    @relation(fields: [reunion_id], references: [id])
+  servicio       Servicio    @relation(fields: [servicio_id], references: [id])
+  usuario        Usuario     @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@map("citas")
+}
+
+model roles {
+  id       Int       @id @default(autoincrement())
+  nombre   String    @unique
+  admins   Admin[]
+  usuarios Usuario[]
+}
