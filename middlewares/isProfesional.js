@@ -1,5 +1,6 @@
 module.exports = function isProfesional(req, res, next) {
-  if (!req.user || req.user.role !== 'profesional') {
+  const roleId = Number(req.user.role);
+  if (!req.user || roleId !== 2) {
     return res.status(403).json({ error: 'Acceso denegado. Solo profesionales.' });
   }
   next();

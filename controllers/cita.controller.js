@@ -17,7 +17,7 @@ exports.crearCita = async (req, res) => {
 
     // 2.Validar que el profesional existe y pertenece al servicio
     const profesional = await prisma.profesional.findUnique({
-      where: { id: Number(profesional_id) }
+      where: { usuario_id: Number(profesional_id) }
     });
     if (!profesional || profesional.servicio_id !== servicio.id) {
       return res.status(404).json({ error: 'Profesional no válido para este servicio' });
@@ -55,7 +55,7 @@ exports.crearCita = async (req, res) => {
         usuario:     { select: { id: true, nombres: true, apellidos: true } },
         servicio:    { select: { id: true, nombre: true } },
         profesional: { select: { 
-          usuario: { select: { id: true, nombres: true, apellidos: true } }
+          usuarios: { select: { id: true, nombres: true, apellidos: true } }
         } }
       }
     });
@@ -78,7 +78,10 @@ exports.aprobarCita = async (req, res) => {
   try {
     const cita = await prisma.cita.findUnique({
       where: { id: citaId },
-      include: { profesional: true, usuario: true }
+      include: {
+        profesional: { include: { usuarios: true } },
+        usuario: true
+      }
     });
 
     if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
@@ -99,9 +102,9 @@ exports.aprobarCita = async (req, res) => {
       const token = await getAccessToken();
 
       const nuevaReunionZoom = await crearMeeting(token, {
-        topic: `Reuniones de ${cita.profesional.usuario.nombres}`,
+        topic: `Reuniones de ${cita.profesional.usuarios.nombres}`,
         start_time: cita.fecha.toISOString(),
-        agenda: `Reunión diaria de ${cita.profesional.usuario.nombres}`,
+        agenda: `Reunión diaria de ${cita.profesional.usuarios.nombres}`,
         password:   'Auto123'
       });
 
@@ -117,7 +120,7 @@ exports.aprobarCita = async (req, res) => {
           join_url: nuevaReunionZoom.join_url,
           password: nuevaReunionZoom.password,
           profesional: {
-            connect: { id: cita.profesional_id }
+            connect: { usuario_id: cita.profesional_id }
           },
           fecha
         }
@@ -135,7 +138,7 @@ exports.aprobarCita = async (req, res) => {
     }
       },
       include: {
-        profesional: { include: { usuario: true } },
+        profesional: { include: { usuarios: true } },
         reunion: true
       }
     });
@@ -249,15 +252,26 @@ exports.obtenerCitasUsuario = async (req, res) => {
   // Citas del usuario por profesional
 exports.obtenerCitasPorProfesional = async (req, res) => {
   const usuarioId     = req.user.id;
-  const profesionalId = parseInt(req.params.id);
+  const profesionalId = Number(req.params.profesionalId);
+
+  if (isNaN(profesionalId)) {
+    return res.status(400).json({ error: 'ID de profesional inválido' });
+  }
+
   try {
     const citas = await prisma.cita.findMany({
       where: {
-        usuarioId,
-        profesionalId,
+        usuario_id: usuarioId,
+        profesional_id: profesionalId,
         estado: 'aprobada'
       },
-      include: { servicio: true, profesional: true, reunion: true }
+      include: {
+        servicio:    true,
+        profesional: {
+          include: { usuarios: true } 
+        },
+        reunion:     true
+      }
     });
     res.json(citas);
   } catch (err) {
@@ -289,14 +303,19 @@ exports.obtenerCitasPorFecha = async (req, res) => {
 // Profesional: citas por usuario
 // GET /api/citas/profesional/usuario/:usuarioId
 exports.obtenerCitasProfesionalPorUsuario = async (req, res) => {
-  const profesionalId = req.user.id; 
-  const usuarioId     = Number(req.params.id);
+
+  const profesionalId = Number(req.user.userId);  
+  const usuarioId     = Number(req.params.usuarioId);
+
+  if (isNaN(usuarioId)) {
+    return res.status(400).json({ error: 'ID de usuario inválido' });
+  }
 
   try {
     const citas = await prisma.cita.findMany({
       where: {
-        profesionalId,
-        usuarioId,
+        profesional_id: profesionalId,
+        usuario_id: usuarioId,
         estado: 'aprobada'
       },
       include: { usuario: true, servicio: true, reunion: true }
@@ -319,7 +338,7 @@ exports.obtenerCitasProfesionalPorFecha = async (req, res) => {
   try {
     const citas = await prisma.cita.findMany({
       where: {
-        profesionalId,
+        profesional_id: profesionalId,
         fecha,
         estado: 'aprobada'
       },
