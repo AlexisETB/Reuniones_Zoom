@@ -152,12 +152,12 @@ exports.aprobarCita = async (req, res) => {
 };
 
 exports.obtenerCitasUsuario = async (req, res) => {
-    const usuarioId = req.user.id;
+    const usuarioId = req.user.userId; // Este usuario debe ser un cliente autenticado
   
     try {
       const citas = await prisma.cita.findMany({
         where: {
-          ususario_id: usuarioId,
+          usuario_id: usuarioId,
           estado: 'aprobada'
         },
         include: {
@@ -251,7 +251,7 @@ exports.obtenerCitasUsuario = async (req, res) => {
 
   // Citas del usuario por profesional
 exports.obtenerCitasPorProfesional = async (req, res) => {
-  const usuarioId     = req.user.id;
+  const usuarioId     = req.user.userId;
   const profesionalId = Number(req.params.profesionalId);
 
   if (isNaN(profesionalId)) {
@@ -281,13 +281,13 @@ exports.obtenerCitasPorProfesional = async (req, res) => {
 };
 //Citas del usuario por fecha
 exports.obtenerCitasPorFecha = async (req, res) => {
-  const usuarioId = req.user.id;
+  const usuarioId = req.user.userId;
   const fechaStr  = req.params.fecha;
   const fecha = new Date(fechaStr);
   try {
     const citas = await prisma.cita.findMany({
       where: {
-        usuarioId,
+        usuario_id: usuarioId,
         fecha,
         estado: 'aprobada'
       },
