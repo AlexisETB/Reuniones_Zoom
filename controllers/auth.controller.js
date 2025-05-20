@@ -34,8 +34,25 @@ exports.register = async (req, res) => {
         res.status(201).json({ message: 'Usuario registrado correctamente', user: result.rows[0] });
     } catch (error) {
         console.error('Error en registro:', error);
-        res.status(500).json({ error: 'Error al registrar usuario' });
+        // Violación de unicidad en Postgres
+    if (error.code === '23505') {
+      // A veces viene error.constraint; si no, parseamos detail
+      const constraint = error.constraint || '';
+      const detail     = error.detail || '';
+
+      if (constraint.includes('usuarios_cedula_key') || detail.includes('(cedula)')) {
+        return res.status(409).json({ error: 'La cédula ya está registrada' });
+      }
+      if (constraint.includes('usuarios_email_key')  || detail.includes('(email)')) {
+        return res.status(409).json({ error: 'El correo ya está registrado' });
+      }
+      // Otro unique constraint
+      return res.status(409).json({ error: 'Ya existe un registro con esos datos' });
     }
+
+    // Otros errores
+    return res.status(500).json({ error: 'Error al registrar usuario' });
+  }
 };
 
       // ————— Login de admin —————
