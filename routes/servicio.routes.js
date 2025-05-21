@@ -8,5 +8,7 @@ router.get('/', servicioController.obtenerServicios);
 
 //admin 
 router.post('/', verifyToken, require('../middlewares/isAdmn'), servicioController.crearServicio);
+// Eliminar un servicio por ID
+router.delete('/delete/:id', verifyToken, isAdmin, servicioController.deleteServicio);
 
 module.exports = router;

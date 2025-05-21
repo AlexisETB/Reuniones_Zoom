@@ -9,5 +9,7 @@ router.get('/', profesionalController.obtenerProfesionales);
 
 //admin puede crear profesionales
 router.post('/', verifyToken, isAdmin, profesionalController.crearProfesional);
+// Eliminar un profesional por ID
+router.delete('/delete/:id', verifyToken, isAdmin, profesionalController.deleteProfesional);
 
 module.exports = router;
