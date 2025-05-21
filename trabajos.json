@@ -1,0 +1,47 @@
+[
+  {
+    "id": 5,
+    "empresa": "Banco ANEUPI",
+    "departamento": "Finanzas",
+    "cargo": "Asesor Financiero",
+    "horario": "08:00 am a 17:00 pm",
+    "modalidades": ["presencial", "virtual", "híbrida"],
+    "color": "#25466a"
+  },
+  {
+    "id": 4,
+    "empresa": "Universidad LECENI",
+    "departamento": "Académico",
+    "cargo": "Docente de Marketing",
+    "horario": "08:00 am a 17:00 pm",
+    "modalidades": ["presencial", "virtual", "híbrida"],
+    "color": "#004564"
+  },
+  {
+    "id": 3,
+    "empresa": "Constructora LECENI",
+    "departamento": "Marketing",
+    "cargo": "Agentes Vendedores",
+    "horario": "08:00 am a 17:00 pm",
+    "modalidades": ["presencial", "virtual", "híbrida"],
+    "color": "#FF0000"
+  },
+  {
+    "id": 2,
+    "empresa": "TV ANEUPI",
+    "departamento": "Comunicación",
+    "cargo": "Comunicadora",
+    "horario": "08:00 am a 17:00 pm",
+    "modalidades": ["presencial", "virtual", "híbrida"],
+    "color": "#00335F"
+  },
+  {
+    "id": 1,
+    "empresa": "Fundacion ANEUPI",
+    "departamento": "Contabilidad",
+    "cargo": "Contadora",
+    "horario": "08:00 am a 17:00 pm",
+    "modalidades": ["presencial", "virtual", "híbrida"],
+    "color": "#00335F"
+  }
+]

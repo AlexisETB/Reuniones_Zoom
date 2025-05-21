@@ -8,21 +8,22 @@ datasource db {
 }
 
 model Usuario {
-  id               Int          @id @default(autoincrement())
-  nombres          String
-  apellidos        String
-  cedula           String       @unique
-  fecha_nacimiento DateTime     @db.Date
-  telefono         String?
-  pais             String?
-  ciudad           String?
-  email            String       @unique
-  discapacidad     Boolean      @default(false)
-  password         String
-  rol_id           Int
-  citas            Cita[]
-  profesionales    Profesional?
-  roles            roles        @relation(fields: [rol_id], references: [id])
+  id                  Int                   @id @default(autoincrement())
+  nombres             String
+  apellidos           String
+  cedula              String                @unique
+  fecha_nacimiento    DateTime              @db.Date
+  telefono            String?
+  pais                String?
+  ciudad              String?
+  email               String                @unique
+  discapacidad        Boolean               @default(false)
+  password            String
+  rol_id              Int
+  citas               Cita[]
+  postulacion_empleos postulacion_empleos[]
+  profesionales       Profesional?
+  roles               roles                 @relation(fields: [rol_id], references: [id])
 
   @@map("usuarios")
 }
@@ -88,7 +89,8 @@ model Cita {
   fecha          DateTime    @db.Date
   hora           DateTime    @db.Time(6)
   razon          String?
-  estado         String      @default("pendiente")
+  estado_id      Int         @default(1)
+  estados        estados     @relation(fields: [estado_id], references: [id])
   profesional    Profesional @relation(fields: [profesional_id], references: [usuario_id])
   reunion        Reunion?    @relation(fields: [reunion_id], references: [id])
   servicio       Servicio    @relation(fields: [servicio_id], references: [id])
@@ -102,4 +104,67 @@ model roles {
   nombre   String    @unique
   admins   Admin[]
   usuarios Usuario[]
+}
+
+model estados {
+  id                  Int                   @id @default(autoincrement())
+  nombre              String                @unique
+  citas               Cita[]
+  postulacion_empleos postulacion_empleos[]
+}
+
+model modalidades {
+  id                   Int                    @id @default(autoincrement())
+  nombre               String                 @unique
+  postulacion_empleos  postulacion_empleos[]
+  trabajos_modalidades trabajos_modalidades[]
+}
+
+model paises {
+  id                  Int                   @id @default(autoincrement())
+  nombre              String
+  tlf_code            String?
+  postulacion_empleos postulacion_empleos[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model postulacion_empleos {
+  id                Int          @id @default(autoincrement())
+  usuario_id        Int
+  trabajo_id        Int
+  profesion         String
+  area              String
+  modalidad_id      Int?
+  jornada           String       @default("tiempo completo")
+  email             String
+  ciudad            String?
+  pais_id           Int?
+  discapacidad      Boolean?     @default(false)
+  fecha_postulacion DateTime?    @default(now()) @db.Timestamp(6)
+  estado_id         Int          @default(1)
+  estados           estados      @relation(fields: [estado_id], references: [id])
+  modalidades       modalidades? @relation(fields: [modalidad_id], references: [id])
+  paises            paises?      @relation(fields: [pais_id], references: [id])
+  trabajos          trabajos     @relation(fields: [trabajo_id], references: [id], onDelete: Cascade)
+  usuarios          Usuario      @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+}
+
+model trabajos {
+  id                   Int                    @id @default(autoincrement())
+  empresa              String
+  departamento         String?
+  cargo                String
+  horario              String?
+  color                String?
+  postulacion_empleos  postulacion_empleos[]
+  trabajos_modalidades trabajos_modalidades[]
+}
+
+model trabajos_modalidades {
+  trabajo_id   Int
+  modalidad_id Int
+  modalidades  modalidades @relation(fields: [modalidad_id], references: [id], onDelete: Cascade)
+  trabajos     trabajos    @relation(fields: [trabajo_id], references: [id], onDelete: Cascade)
+
+  @@id([trabajo_id, modalidad_id])
 }

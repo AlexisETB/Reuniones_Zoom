@@ -1,155 +1,39 @@
 const { getAccessToken, crearMeeting } = require('../utils/zoom');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const citaService = require('../services/cita.service');
 
 exports.crearCita = async (req, res) => {
   const usuario_id     = req.user.userId;  
-  const { servicio_id, profesional_id, fecha, hora, razon } = req.body;
-
   try {
-    // 1.Validar existencia del servicio
-    const servicio = await prisma.servicio.findUnique({
-      where: { id: Number(servicio_id) }
-    });
-    if (!servicio) {
-      return res.status(404).json({ error: 'Servicio no encontrado' });
-    }
-
-    // 2.Validar que el profesional existe y pertenece al servicio
-    const profesional = await prisma.profesional.findUnique({
-      where: { usuario_id: Number(profesional_id) }
-    });
-    if (!profesional || profesional.servicio_id !== servicio.id) {
-      return res.status(404).json({ error: 'Profesional no válido para este servicio' });
-    }
-
-    // 3.Validar que la fecha y hora son válidas
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-      return res.status(400).json({ error: 'Formato de fecha inválido. Usa YYYY-MM-DD' });
-    }
-    // Validar formato HH:MM
-    if (!/^\d{2}:\d{2}$/.test(hora)) {
-      return res.status(400).json({ error: 'Formato de hora inválido. Usa HH:MM' });
-    }
-
-    // Construir objeto Date para hora
-    const horaDate = new Date(`${fecha}T${hora}:00`);
-    if (isNaN(horaDate.getTime())) {
-      return res.status(400).json({ error: 'Fecha u hora inválida' });
-    }
-
-    console.log(horaDate.toISOString()); // "2025-05-20T10:30:00.000Z"
-
-    // 3. Crear la cita en estado 'pendiente'
-    const nuevaCita = await prisma.cita.create({
-      data: {
-        usuario_id:     usuario_id,
-        servicio_id:    Number(servicio_id),
-        profesional_id: Number(profesional_id),
-        fecha:         new Date(fecha),
-        hora:          horaDate,
-        razon,
-        estado:        'pendiente'  
-      },
-      include: {
-        usuario:     { select: { id: true, nombres: true, apellidos: true } },
-        servicio:    { select: { id: true, nombre: true } },
-        profesional: { select: { 
-          usuarios: { select: { id: true, nombres: true, apellidos: true } }
-        } }
-      }
-    });
-
-    res.status(201).json({
-      message: 'Cita creada, pendiente de aprobación',
-      cita: nuevaCita
-    });
+    const cita = await citaService.crearCita({ ...req.body, usuario_id });
+    res.status(201).json({ message: 'Cita creada', cita });
   } catch (error) {
-    console.error('Error al crear cita:', error.message);
-    res.status(500).json({ error: 'Error interno al crear la cita' });
+    res.status(error.status || 500).json({ error: error.message });
   }
+
 };
 
-
-// Aprobar cita
 exports.aprobarCita = async (req, res) => {
   const citaId = parseInt(req.params.id);
 
   try {
-    const cita = await prisma.cita.findUnique({
-      where: { id: citaId },
-      include: {
-        profesional: { include: { usuarios: true } },
-        usuario: true
-      }
-    });
-
-    if (!cita) return res.status(404).json({ error: 'Cita no encontrada' });
-
-    const fechaStr  = cita.fecha.toISOString().split('T')[0];
-    const fecha = new Date(fechaStr);
-
-    // 1. Buscar si ya existe reunión del profesional ese día
-    let reunion = await prisma.reunion.findFirst({
-      where: {
-        profesional_id: cita.profesional_id,
-        fecha
-      }
-    });
-
-    // 2. Si no existe, crear reunión en Zoom y guardarla
-    if (!reunion) {
-      const token = await getAccessToken();
-
-      const nuevaReunionZoom = await crearMeeting(token, {
-        topic: `Reuniones de ${cita.profesional.usuarios.nombres}`,
-        start_time: cita.fecha.toISOString(),
-        agenda: `Reunión diaria de ${cita.profesional.usuarios.nombres}`,
-        password:   'Auto123'
-      });
-
-      reunion = await prisma.reunion.create({
-        data: {
-          uuid: nuevaReunionZoom.uuid,
-          meeting_id: String(nuevaReunionZoom.id),
-          start_time: new Date(nuevaReunionZoom.start_time),
-          duration: nuevaReunionZoom.duration,
-          topic: nuevaReunionZoom.topic,
-          agenda:       nuevaReunionZoom.agenda,
-          start_url: nuevaReunionZoom.start_url,
-          join_url: nuevaReunionZoom.join_url,
-          password: nuevaReunionZoom.password,
-          profesional: {
-            connect: { usuario_id: cita.profesional_id }
-          },
-          fecha
-        }
-      });
-      
-    }
-
-    // 3. Actualizar la cita con la reunión y marcar como aprobada
-    const citaActualizada = await prisma.cita.update({
-      where: { id: cita.id },
-      data: {
-        estado: 'aprobada',
-        reunion: {
-      connect: { id: reunion.id }
-    }
-      },
-      include: {
-        profesional: { include: { usuarios: true } },
-        reunion: true
-      }
-    });
-
-    res.json({ message: 'Cita aprobada y reunión asignada', cita: citaActualizada });
-
+    const cita = await citaService.aprobarCita(citaId);
+    res.json({ message: 'Cita aprobada y reunión asignada', cita });
   } catch (error) {
-    console.error('Error al aprobar cita:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Error al aprobar cita' });
+    res.status(error.status || 500).json({ error: error.message });
   }
 };
+
+exports.rechazarCita = async (req, res) => {
+    const citaId = parseInt(req.params.id);
+    try {
+      const cita = await citaService.rechazarCita(citaId);
+      res.json({ message: 'Cita rechazada correctamente', cita });
+    } catch (error) {
+    res.status(error.status || 500).json({ error: error.message });
+      }
+  };
 
 exports.obtenerCitasUsuario = async (req, res) => {
     const usuarioId = req.user.userId; // Este usuario debe ser un cliente autenticado
@@ -158,7 +42,7 @@ exports.obtenerCitasUsuario = async (req, res) => {
       const citas = await prisma.cita.findMany({
         where: {
           usuario_id: usuarioId,
-          estado: 'aprobada'
+          estado_id: 2
         },
         include: {
           reunion: true,
@@ -207,7 +91,7 @@ exports.obtenerCitasUsuario = async (req, res) => {
   exports.obtenerCitasPendientes = async (req, res) => {
     try {
       const citas = await prisma.cita.findMany({
-        where: { estado: 'pendiente' },
+        where: { estado_id: 1 },
         include: {
           usuario: true,
           servicio: true,
@@ -222,32 +106,6 @@ exports.obtenerCitasUsuario = async (req, res) => {
     }
   };
 
-  exports.rechazarCita = async (req, res) => {
-    const citaId = parseInt(req.params.id);
-  
-    try {
-      const cita = await prisma.cita.findUnique({ 
-        where: { id: citaId },
-        include: { profesional: true, usuario: true }
-       });
-  
-      if (!cita) {
-        return res.status(404).json({ error: 'Cita no encontrada' });
-      }
-  
-      const citaActualizada = await prisma.cita.update({
-        where: { id: citaId },
-        data: {
-          estado: 'denegada'
-        }
-      });
-  
-      res.json({ message: 'Cita rechazada correctamente.', cita: citaActualizada });
-    } catch (error) {
-      console.error('Error al rechazar cita:', error.message);
-      res.status(500).json({ error: 'Error al rechazar cita' });
-    }
-  };
 
   // Citas del usuario por profesional
 exports.obtenerCitasPorProfesional = async (req, res) => {
@@ -263,7 +121,7 @@ exports.obtenerCitasPorProfesional = async (req, res) => {
       where: {
         usuario_id: usuarioId,
         profesional_id: profesionalId,
-        estado: 'aprobada'
+        estado_id: 2
       },
       include: {
         servicio:    true,
@@ -289,7 +147,7 @@ exports.obtenerCitasPorFecha = async (req, res) => {
       where: {
         usuario_id: usuarioId,
         fecha,
-        estado: 'aprobada'
+        estado_id: 2
       },
       include: { servicio: true, profesional: true, reunion: true }
     });
@@ -316,7 +174,7 @@ exports.obtenerCitasProfesionalPorUsuario = async (req, res) => {
       where: {
         profesional_id: profesionalId,
         usuario_id: usuarioId,
-        estado: 'aprobada'
+        estado_id: 2
       },
       include: { usuario: true, servicio: true, reunion: true }
     });
@@ -340,7 +198,7 @@ exports.obtenerCitasProfesionalPorFecha = async (req, res) => {
       where: {
         profesional_id: profesionalId,
         fecha,
-        estado: 'aprobada'
+        estado_id: 2
       },
       include: { usuario: true, servicio: true, reunion: true }
     });

@@ -14,6 +14,17 @@ async function createTables() {
   await client.connect();
 
   try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS estados (
+        id SERIAL PRIMARY KEY,
+        nombre TEXT UNIQUE NOT NULL  -- ej. 'pendiente', 'aprobada', 'rechazada', etc.
+      );
+    `);
+    await client.query(`
+      INSERT INTO estados (nombre)  
+      VALUES ('pendiente'), ('aprobada'), ('rechazada')
+      ON CONFLICT (nombre) DO NOTHING;
+    `);
     await client.query('BEGIN');
     // 7. Roles
     await client.query(`
@@ -88,7 +99,7 @@ async function createTables() {
     `);
 
    // 5. Reuniones
-await client.query(`
+  await client.query(`
   CREATE TABLE IF NOT EXISTS reuniones (
     id SERIAL PRIMARY KEY,
     uuid TEXT NOT NULL,
@@ -106,7 +117,7 @@ await client.query(`
     fecha TIMESTAMP NOT NULL,
     UNIQUE (profesional_id, fecha)
   );
-`);
+  `);
 
 
     // 6. Citas
@@ -128,12 +139,87 @@ await client.query(`
         fecha DATE NOT NULL,
         hora TIME NOT NULL,
         razon TEXT,
-        estado TEXT NOT NULL DEFAULT 'pendiente'
-          CHECK (estado IN ('pendiente','aprobada','denegada'))
+        estado_id INTEGER NOT NULL DEFAULT 1
+          REFERENCES estados(id)
+          ON UPDATE CASCADE
+          ON DELETE RESTRICT
       );
     `);
 
-    
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS modalidades (
+        id SERIAL PRIMARY KEY,
+        nombre TEXT UNIQUE NOT NULL
+      );
+    `);
+
+    await client.query(`
+      INSERT INTO modalidades (nombre)
+        VALUES 
+          ('presencial'),
+          ('virtual'),
+          ('híbrida')
+      ON CONFLICT (nombre) DO NOTHING;
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS paises (
+        id SERIAL PRIMARY KEY,
+        nombre TEXT NOT NULL,
+        tlf_code TEXT
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS trabajos (
+        id SERIAL PRIMARY KEY,
+        empresa TEXT NOT NULL,
+        departamento TEXT,
+        cargo TEXT NOT NULL,
+        horario TEXT,
+        color TEXT
+    );
+    `); 
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS trabajos_modalidades (
+        trabajo_id   INTEGER NOT NULL REFERENCES trabajos(id)
+                  ON UPDATE CASCADE ON DELETE CASCADE,
+        modalidad_id INTEGER NOT NULL REFERENCES modalidades(id)
+                  ON UPDATE CASCADE ON DELETE CASCADE,
+          PRIMARY KEY (trabajo_id, modalidad_id)
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS postulacion_empleos (
+        id SERIAL PRIMARY KEY,
+        usuario_id INTEGER NOT NULL REFERENCES usuarios(id)
+          ON UPDATE CASCADE
+          ON DELETE CASCADE,
+        trabajo_id INTEGER NOT NULL REFERENCES trabajos(id)
+          ON UPDATE CASCADE
+          ON DELETE CASCADE,
+        profesion TEXT NOT NULL,
+        area TEXT NOT NULL,
+        modalidad_id INTEGER REFERENCES modalidades(id)
+          ON UPDATE CASCADE
+          ON DELETE SET NULL,
+        jornada TEXT NOT NULL DEFAULT 'Tiempo completo'
+          CHECK (jornada IN ('Tiempo completo', 'Medio tiempo')),
+        email TEXT NOT NULL,
+        ciudad TEXT,
+        pais_id INTEGER REFERENCES paises(id)
+          ON UPDATE CASCADE
+          ON DELETE SET NULL,
+        discapacidad BOOLEAN DEFAULT FALSE,
+        fecha_postulacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        estado_id INTEGER NOT NULL DEFAULT 1
+          REFERENCES estados(id)
+          ON UPDATE CASCADE
+          ON DELETE RESTRICT
+      );
+    `); 
 
     const adminUser     = process.env.ADMIN_USER;
     const adminPassword = process.env.ADMIN_PASSWORD;

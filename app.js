@@ -3,6 +3,9 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth.routes');
 const { createTables } = require('./init'); 
+const db = require('./models/db.js'); 
+const { cargarPaises } = require('./utils/paises_db.js'); 
+const { cargarTrabajos } = require('./utils/trabajos_db.js');
 
 
 const app = express();
@@ -18,6 +21,7 @@ app.use('/api/profesionales',require('./routes/profesional.routes'));
 app.use('/api/citas',        require('./routes/cita.routes'));
 app.use('/api/usuarios', require('./routes/user.routes'));
 app.use('/api/reuniones', require('./routes/reunion.routes'));
+app.use('/api/postulacion', require('./routes/postTrabajo.routes'));
 
 
 // Rutas 
@@ -38,8 +42,11 @@ app.use((req, res) => {
 
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;
+// Crear tablas y luego iniciar el servidor
 createTables()
-  .then(() => {
+  .then(async () => {
+    await cargarPaises();
+    await cargarTrabajos();
     app.listen(PORT, () => {
       console.log(`Servidor escuchando en http://localhost:${PORT}`);
     });
