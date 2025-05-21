@@ -120,3 +120,22 @@ exports.rechazarPostulacion = async (postulacionId, estadoId) => {
         });
         return postulacionActualizada;
 };
+// Obtener postulaciones pendientes
+exports.obtenerPostulacionesPendientes = async () => {
+    const postulacionesPendientes = await prisma.postulacion_empleos.findMany({
+        where: { estado_id: 1 }, // Estado "Pendiente"
+        include: {
+            trabajos: true,
+            modalidades: true,
+            paises: true,
+            estados: true,
+            usuarios: {
+                select: {
+                    nombres: true,
+                    apellidos: true
+                }
+            }
+        }
+    });
+    return postulacionesPendientes;
+};

@@ -40,6 +40,19 @@ exports.rechazarPostulacion = async (req, res) => {
         res.status(500).json({ error: "Error al rechazar la postulacion" });
     }
 };
+// Obtener postulaciones pendientes
+exports.obtenerPostulacionesPendientes = async (req, res) => {
+    try {
+        const postulaciones = await postTrabajoService.obtenerPostulacionesPendientes();
+        if (postulaciones.length === 0) {
+            return res.status(404).json({ message: 'No hay postulaciones pendientes' });
+        }
+        res.status(200).json(postulaciones);
+    } catch (error) {
+        console.error("Error al obtener las postulaciones:", error);
+        res.status(500).json({ error: "Error al obtener las postulaciones" });
+    }
+};
 
 // Obtener postulaciones por usuario
 exports.obtenerPostulacionesPorUsuario = async (req, res) => {

@@ -76,3 +76,16 @@ exports.rechazarCita = async (citaId) => {
     data: { estado_id: 3 } // denegada
   });
 };
+
+exports.obtenerCitasPendientes = async () => {
+  const citas = await prisma.cita.findMany({
+    where: { estado_id: 1 },
+    include: {
+      usuario: true,
+      servicio: true,
+      profesional: true
+    }
+  });
+
+  return citas;
+};

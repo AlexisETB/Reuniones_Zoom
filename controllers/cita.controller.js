@@ -35,6 +35,20 @@ exports.rechazarCita = async (req, res) => {
       }
   };
 
+exports.obtenerCitasPendientes = async (req, res) => {
+    try {
+      const citas = await citaService.obtenerCitasPendientes();
+      if (citas.length === 0) {
+        return res.status(404).json({ message: 'No hay citas pendientes' });
+      }
+      res.json(citas);
+    } catch (error) {
+      console.error('Error al obtener citas pendientes:', error.message);
+      res.status(500).json({ error: 'Error al obtener citas' });
+    }
+  };
+
+
 exports.obtenerCitasUsuario = async (req, res) => {
     const usuarioId = req.user.userId; // Este usuario debe ser un cliente autenticado
   
@@ -87,25 +101,6 @@ exports.obtenerCitasUsuario = async (req, res) => {
       res.status(500).json({ error: 'Error interno del servidor' });
     }
   };
-
-  exports.obtenerCitasPendientes = async (req, res) => {
-    try {
-      const citas = await prisma.cita.findMany({
-        where: { estado_id: 1 },
-        include: {
-          usuario: true,
-          servicio: true,
-          profesional: true
-        }
-      });
-  
-      res.json(citas);
-    } catch (error) {
-      console.error('Error al obtener citas pendientes:', error.message);
-      res.status(500).json({ error: 'Error al obtener citas' });
-    }
-  };
-
 
   // Citas del usuario por profesional
 exports.obtenerCitasPorProfesional = async (req, res) => {
