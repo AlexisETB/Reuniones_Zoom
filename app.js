@@ -6,6 +6,7 @@ const { createTables } = require('./init');
 const db = require('./models/db.js'); 
 const { cargarPaises } = require('./utils/paises_db.js'); 
 const { cargarTrabajos } = require('./utils/trabajos_db.js');
+const { cargarPracticas } = require('./utils/preprofesionales_db.js');
 
 
 const app = express();
@@ -48,6 +49,7 @@ createTables()
   .then(async () => {
     await cargarPaises();
     await cargarTrabajos();
+    await cargarPracticas();
     app.listen(PORT, () => {
       console.log(`Servidor escuchando en http://localhost:${PORT}`);
     });

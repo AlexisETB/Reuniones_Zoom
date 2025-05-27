@@ -1,0 +1,77 @@
+[
+  {
+    "id": 5,
+    "empresa": "Fundacion ANEUPI",
+    "carrera": "Diseño Gráfico",
+    "tipo_practica": "preprofesionales",
+    "fecha_inicio": "2025-04-28T00:00:00.000Z",
+    "fecha_fin": "2024-11-09T00:00:00.000Z",
+    "total_horas": 240,
+    "horario": "Mañana",
+    "id_modalidad": 2,
+    "Modalidad": {
+      "id": 2,
+      "nombre": "virtual"
+    }
+  },
+  {
+    "id": 4,
+    "empresa": "Fundacion ANEUPI",
+    "carrera": "Contador/a",
+    "tipo_practica": "preprofesionales",
+    "fecha_inicio": "2025-04-28T00:00:00.000Z",
+    "fecha_fin": "2024-11-08T00:00:00.000Z",
+    "total_horas": 240,
+    "horario": "Mañana",
+    "id_modalidad": 1,
+   "Modalidad": {
+      "id": 2,
+      "nombre": "virtual"
+    }
+  },
+  {
+    "id": 3,
+    "empresa": "Fundacion ANEUPI",
+    "carrera": "Comunicación",
+    "tipo_practica": "preprofesionales",
+    "fecha_inicio": "2025-04-28T00:00:00.000Z",
+    "fecha_fin": "2024-11-09T00:00:00.000Z",
+    "total_horas": 240,
+    "horario": "Mañana",
+    "id_modalidad": 1,
+    "Modalidad": {
+      "id": 2,
+      "nombre": "virtual"
+    }
+  },
+  {
+    "id": 2,
+    "empresa": "Fundacion ANEUPI",
+    "carrera": "Administración de empresa",
+    "tipo_practica": "preprofesionales",
+    "fecha_inicio": "2025-04-28T00:00:00.000Z",
+    "fecha_fin": "2024-11-09T00:00:00.000Z",
+    "total_horas": 240,
+    "horario": "Mañana",
+    "id_modalidad": 1,
+    "Modalidad": {
+      "id": 2,
+      "nombre": "virtual"
+    }
+  },
+  {
+    "id": 1,
+    "empresa": "Fundacion ANEUPI",
+    "carrera": "Software",
+    "tipo_practica": "preprofesionales",
+    "fecha_inicio": "2025-04-28T00:00:00.000Z",
+    "fecha_fin": "2025-05-28T00:00:00.000Z",
+    "total_horas": 240,
+    "horario": "Mañana",
+    "id_modalidad": 1,
+    "Modalidad": {
+      "id": 2,
+      "nombre": "virtual"
+    }
+  }
+]

@@ -221,6 +221,85 @@ async function createTables() {
       );
     `); 
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS tipos_practica (
+        id SERIAL PRIMARY KEY,
+        nombre TEXT UNIQUE NOT NULL
+     );
+    `); 
+    await client.query(`
+     INSERT INTO tipos_practica (nombre)
+       VALUES 
+        ('pasantías'),
+        ('preprofesionales'),
+        ('comunitarias'),
+        ('master')
+     ON CONFLICT (nombre) DO NOTHING;
+   `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS horarios (
+        id SERIAL PRIMARY KEY,
+        nombre TEXT UNIQUE NOT NULL
+    );
+    `); 
+    await client.query(`
+      INSERT INTO horarios (nombre)
+         VALUES 
+          ('mañana'),
+          ('tarde'),
+          ('noche'),
+          ('completo')
+      ON CONFLICT (nombre) DO NOTHING;
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS practicas (
+        id SERIAL PRIMARY KEY,
+        empresa TEXT NOT NULL,
+        carrera TEXT NOT NULL,
+        tipo_practica_id INTEGER NOT NULL REFERENCES tipos_practica(id)
+          ON UPDATE CASCADE ON DELETE RESTRICT,
+        fecha_inicio DATE NOT NULL,
+        fecha_fin DATE NOT NULL,
+        total_horas INTEGER NOT NULL CHECK (total_horas > 0),
+        horario_id INTEGER NOT NULL REFERENCES horarios(id)
+          ON UPDATE CASCADE ON DELETE RESTRICT,
+        modalidad_id INTEGER NOT NULL REFERENCES modalidades(id)
+          ON UPDATE CASCADE
+          ON DELETE RESTRICT
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS postulacion_practicas (
+        id SERIAL PRIMARY KEY,
+        usuario_id INTEGER NOT NULL REFERENCES usuarios(id)
+          ON UPDATE CASCADE ON DELETE CASCADE,
+        practica_id INTEGER NOT NULL REFERENCES practicas(id)
+          ON UPDATE CASCADE ON DELETE CASCADE,
+        pais TEXT,
+        ciudad TEXT,
+        telefono TEXT,
+        discapacidad BOOLEAN DEFAULT FALSE,
+        email TEXT NOT NULL,
+        universidad TEXT NOT NULL,
+        carrera TEXT NOT NULL,
+        total_horas INTEGER NOT NULL CHECK (total_horas > 0),
+        tipo_practica_id INTEGER NOT NULL REFERENCES tipos_practica(id)
+          ON UPDATE CASCADE ON DELETE RESTRICT,
+        modalidad_id INTEGER NOT NULL REFERENCES modalidades(id)
+          ON UPDATE CASCADE ON DELETE RESTRICT,
+        horario_id INTEGER NOT NULL REFERENCES horarios(id)
+          ON UPDATE CASCADE ON DELETE RESTRICT,
+        fecha_inicio DATE NOT NULL,
+        fecha_fin DATE NOT NULL,
+        fecha_postulacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        estado_id INTEGER NOT NULL DEFAULT 1
+          REFERENCES estados(id)
+          ON UPDATE CASCADE ON DELETE RESTRICT
+      );
+  `);
+
     const adminUser     = process.env.ADMIN_USER;
     const adminPassword = process.env.ADMIN_PASSWORD;
     if (adminUser && adminPassword) {
