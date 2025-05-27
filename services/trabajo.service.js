@@ -16,6 +16,12 @@ exports.crearTrabajo = async (empresa, departamento, cargo, horario, color) => {
         if (existeTrabajo) {
             return res.status(409).json({ error: 'El trabajo ya existe' });
         }
+        await prisma.$executeRawUnsafe(`
+            SELECT setval(
+                pg_get_serial_sequence('trabajos', 'id'),
+                GREATEST((SELECT MAX(id) FROM trabajos), 0)
+            );
+        `);
         const nuevoTrabajo = await prisma.trabajos.create({
             data: {
                 empresa,
@@ -46,9 +52,7 @@ exports.obtenerTrabajos = async () => {
     try {
         const trabajos = await prisma.trabajos.findMany({
             include: {
-                modalidades: true,
-                paises: true,
-                estados: true
+                trabajos_modalidades: true,
             }
         });
         return trabajos;

@@ -47,7 +47,7 @@ exports.crearPostulacionTrabajo = async (usuarioId,trabajoId, profesion, area, m
                 email: usuario.email,
                 ciudad: usuario.ciudad,
                 discapacidad: usuario.discapacidad,
-                estado_id: estadoPostulacion,
+                estado_id: 1,
             }, 
             include: {
                 trabajos: true,

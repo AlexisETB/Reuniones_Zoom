@@ -11,3 +11,5 @@ router.post('/nuevoTrabajo', verifyToken, isAdmin, trabajos.crearTrabajo);
 router.delete('/:id', verifyToken, isAdmin, trabajos.eliminarTrabajo);
 //Obtener trabajos
 router.get('/allTrabajos', verifyToken, isAdmin, trabajos.obtenerTrabajos);
+
+module.exports = router;

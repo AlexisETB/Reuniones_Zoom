@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const citaService = require('../services/trabajo.service');
+const trabajoService = require('../services/trabajo.service');
 
 exports.crearTrabajo = async (req, res) => {
     const { empresa, departamento, cargo, horario, color } = req.body;

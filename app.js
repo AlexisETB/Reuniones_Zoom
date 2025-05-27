@@ -22,6 +22,7 @@ app.use('/api/citas',        require('./routes/cita.routes'));
 app.use('/api/usuarios', require('./routes/user.routes'));
 app.use('/api/reuniones', require('./routes/reunion.routes'));
 app.use('/api/postulacion', require('./routes/postTrabajo.routes'));
+app.use('/api/trabajo', require('./routes/trabajo.routes'));
 
 
 // Rutas 

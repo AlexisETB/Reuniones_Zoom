@@ -3,12 +3,11 @@ const router = express.Router();
 const postulacion_empleos = require('../controllers/postTrabajo.controller');
 const verifyToken = require('../middlewares/verifyToken');
 const isAdmin = require('../middlewares/isAdmn');
-const isProfesional = require('../middlewares/isProfesional');
 
 //Rutas usuario
 router.post('/', verifyToken, postulacion_empleos.crearPostulacionTrabajo);
 router.put('/cancelar/:id', verifyToken, postulacion_empleos.cancelarPostulacion);
-router.get('/misPostulaciones', verifyToken, isProfesional, postulacion_empleos.obtenerPostulacionesPorUsuario);
+router.get('/misPostulaciones', verifyToken, postulacion_empleos.obtenerPostulacionesPorUsuario);
 
 // Rutas protegidas para admin
 router.put('/aprobar/:id', verifyToken, isAdmin, postulacion_empleos.aprobarPostulacion);
