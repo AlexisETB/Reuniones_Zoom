@@ -13,6 +13,19 @@ exports.crearPostulacionTrabajo = async (req, res) => {
         res.status(500).json({ error: "Error al crear la postulacion" });
         }
 };
+//Cancelar postulacion
+exports.cancelarPostulacion = async (req, res) => {
+    const postulacionId = req.params.id;
+    const usuarioId = req.user.userId;
+
+    try {
+        const postulacion = await postTrabajoService.cancelarPostulacion(postulacionId, usuarioId);
+        res.status(200).json(postulacion);
+    } catch (error) {
+        console.error("Error al cancelar la postulacion:", error);
+        res.status(500).json({ error: "Error al cancelar la postulacion" });
+    }
+};
 
 //aprobar postulacion
 exports.aprobarPostulacion = async (req, res) => {

@@ -139,3 +139,32 @@ exports.obtenerPostulacionesPendientes = async () => {
     });
     return postulacionesPendientes;
 };
+
+//Cancelar postulacion (Usuario)
+exports.cancelarPostulacion = async (postulacionId, usuarioId) => {
+    const postulacion = await prisma.postulacion_empleos.findUnique({
+        where: { id: Number(postulacionId),
+            usuario_id: usuarioId
+         }
+    });
+    if (!postulacion) {
+        return res.status(404).json({ error: "Postulación no encontrada" });
+    }
+    const postulacionActualizada = await prisma.postulacion_empleos.update({
+        where: { id: Number(postulacionId) },
+        data: { estado_id: 3 }, 
+        include: {
+            trabajos: true,
+            modalidades: true,
+            paises: true,
+            estados: true,
+            usuarios: {
+                select: {
+                    nombres: true,
+                    apellidos: true
+                }
+            }
+        }
+    });
+    return postulacionActualizada;
+};
